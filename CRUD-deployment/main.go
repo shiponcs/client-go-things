@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
@@ -11,7 +10,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/client-go/util/retry"
-	"os"
+	"github.com/shiponcs/client-go-things/utils"
 )
 
 func main() {
@@ -31,7 +30,7 @@ func main() {
 			Name: "client-go-speaking",
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: GetInt32Ptr(2),
+			Replicas: utils.GetInt32Ptr(2),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": "client-go-speaking",
@@ -70,7 +69,7 @@ func main() {
 	}
 	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
 
-	prompt()
+	utils.Prompt()
 	fmt.Println("Updating deployment...")
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := deploymentsClient.Get(context.TODO(), "client-go-speaking", metav1.GetOptions{})
@@ -78,7 +77,7 @@ func main() {
 			return getErr
 		}
 
-		result.Spec.Replicas = GetInt32Ptr(1)
+		result.Spec.Replicas = utils.GetInt32Ptr(1)
 		result.Spec.Template.Spec.Containers[0].Image = "nginx:1.7.3"
 		_, updateErr := deploymentsClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
@@ -88,7 +87,7 @@ func main() {
 	}
 	fmt.Printf("Updated deployment %q.\n", result.GetObjectMeta().GetName())
 
-	prompt()
+	utils.Prompt()
 	fmt.Println("Listing deployments... in ", v1.NamespaceDefault)
 	list, err := deploymentsClient.List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -97,7 +96,7 @@ func main() {
 	for _, d := range list.Items {
 		fmt.Printf(" * %s (%d replicas)\n", d.Name, *d.Spec.Replicas)
 	}
-	prompt()
+	utils.Prompt()
 	fmt.Println("Deleting deployment...")
 	deletePolicy := metav1.DeletePropagationForeground
 	if err := deploymentsClient.Delete(context.TODO(), "client-go-speaking", metav1.DeleteOptions{
@@ -106,20 +105,4 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Deleted deployment %q.\n", result.GetObjectMeta().GetName())
-}
-
-func GetInt32Ptr(i int32) *int32 {
-	return &i
-}
-
-func prompt() {
-	fmt.Printf("-> Press Return key to continue.")
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		break
-	}
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-	fmt.Println()
 }
