@@ -69,6 +69,7 @@ func main() {
 	}
 	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
 
+	// update Deployment
 	utils.Prompt()
 	fmt.Println("Updating deployment...")
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -87,6 +88,7 @@ func main() {
 	}
 	fmt.Printf("Updated deployment %q.\n", result.GetObjectMeta().GetName())
 
+	// list Deployment
 	utils.Prompt()
 	fmt.Println("Listing deployments... in ", v1.NamespaceDefault)
 	list, err := deploymentsClient.List(context.TODO(), metav1.ListOptions{})
@@ -96,6 +98,8 @@ func main() {
 	for _, d := range list.Items {
 		fmt.Printf(" * %s (%d replicas)\n", d.Name, *d.Spec.Replicas)
 	}
+
+	// delete Deployment
 	utils.Prompt()
 	fmt.Println("Deleting deployment...")
 	deletePolicy := metav1.DeletePropagationForeground
