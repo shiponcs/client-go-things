@@ -1,4 +1,4 @@
-module client-go-things
+module github.com/shiponcs/client-go-things
 
 go 1.23.0
 
